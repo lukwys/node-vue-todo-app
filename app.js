@@ -5,75 +5,40 @@ const connection = mysql.createConnection({
   password: 'root',
   database: 'todoDB'
 });
-// queries
-const insert = "INSERT INTO todo (`title`, `flag`, `status`) VALUES ('Initialize the database', '0', CURRENT_TIMESTAMP)";
-const selectAll = "SELECT * FROM todo";
-const selectLast = "SELECT * FROM todo WHERE id=?";
-const changeStatus = "UPDATE todo SET flag=1 where id=?";
-const remove = "DELETE FROM todo WHERE id=?";
 
-connection.connect((error) => {
-  if (error) throw error;
-  console.log('Conected');
-});
-
-const insertTodo = () => {
+async function connect() {
   return new Promise((resolve, reject) => {
-    connection.query(insert, (error, results) => {
-      if (error) {
-        return reject(error);
+    connection.connect((err) => {
+      if (err) reject(err);
+      else {
+        console.log('Conected');
+        resolve();
       }
-      resolve(results.insertId);
     });
   });
 };
 
-const selectAllTodos = () => {
-  connection.query(selectAll, (error, results) => {
-    if (error) throw error;
-    console.log('All records:');
-    console.log(results);
+async function execute(sql, params = []) {
+  return new Promise((reslove, reject) => {
+    connection.query(sql, params, (err, results, fields) => {
+      if (err) reject(err);
+      else reslove({ results, fields });
+    });
   });
 };
 
-const selectLastTodo = (lastAddedTodoId) => {
-  connection.query(selectLast, lastAddedTodoId, (error, results) => {
-    if (error) throw error;
-    console.log('Last added record:');
-    console.log(results);
-  });
-};
-
-const changeTodoStatus = (lastAddedTodoId) => {
-  connection.query(changeStatus, lastAddedTodoId, (error, results) => {
-    if (error) throw error;
-    console.log(`Number of changed rows: ${results.changedRows}`);
-  });
-};
-
-const removeLastTodo = (lastAddedTodoId) => {
-  connection.query(remove, lastAddedTodoId, (error, results) => {
-    if (error) throw error;
-    console.log(`Number of deleted rows: ${results.affectedRows}`);
-  });
+function formatResults({ results, fields }) {
+  return results.map(row => fields.map(field => `${field.name}: ${row[field.name]}`).join(', ')).join('\n');
 }
 
-insertTodo()
-  .then((id) => {
-    selectAllTodos();
-    return id;
-  })
-  .then((id) => {
-    changeTodoStatus(id);
-    return id;
-  })
-  .then((id) => {
-    selectLastTodo(id);
-    return id;
-  })
-  .then((id) => {
-    removeLastTodo(id);
-  })
-  .then(() => {
-    connection.end();
-  });
+async function init() {
+  await connect();
+  const newId = (await execute('insert into todo (title) values (?)', [ 'Node is awesome' ])).results.insertId;
+  console.log(formatResults(await execute('select * from todo')));
+  console.log('Number of changed rows: ' , (await execute('update todo set flag=1 where id=?', [newId])).results.changedRows);
+  console.log(formatResults(await execute('select * from todo where id=?', [newId])));
+  console.log('Number of deleted rows: ' , (await execute('delete from todo where id=?', [newId])).results.affectedRows);
+  connection.end();
+}
+
+init();
