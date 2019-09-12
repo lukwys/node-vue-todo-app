@@ -1,9 +1,9 @@
 const mysql = require('mysql');
 const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'root',
-    database: 'todoDB'
+  host: 'localhost',
+  user: 'root',
+  password: 'root',
+  database: 'todoDB'
 });
 // queries
 const insert = "INSERT INTO todo (`title`, `flag`, `status`) VALUES ('Initialize the database', '0', CURRENT_TIMESTAMP)";
@@ -17,38 +17,63 @@ connection.connect((error) => {
   console.log('Conected');
 });
 
-connection.query(insert, (error, results) => {
-  if (error) {
-    return connection.rollback(() => {
-      throw error;
-    })
-  };
+const insertTodo = () => {
+  return new Promise((resolve, reject) => {
+    connection.query(insert, (error, results) => {
+      if (error) {
+        return reject(error);
+      }
+      resolve(results.insertId);
+    });
+  });
+};
 
-  console.log(`New id: ${results.insertId}`);
-
-  const lastAddedRecordId = results.insertId;
-
+const selectAllTodos = () => {
   connection.query(selectAll, (error, results) => {
     if (error) throw error;
     console.log('All records:');
     console.log(results);
-
-    connection.query(selectLast, lastAddedRecordId, (error, results) => {
-      if (error) throw error;
-      console.log('Last added record:');
-      console.log(results);
-
-      connection.query(changeStatus, lastAddedRecordId, (error, results) => {
-        if (error) throw error;
-        console.log("Changed record:");
-        console.log(results);
-
-        connection.query(remove, lastAddedRecordId, (error, results) => {
-          if (error) throw error;
-          console.log(`Number of deleted rows: ${results.affectedRows}`);
-          connection.end();
-        });
-      });
-    });
   });
-});
+};
+
+const selectLastTodo = (lastAddedTodoId) => {
+  connection.query(selectLast, lastAddedTodoId, (error, results) => {
+    if (error) throw error;
+    console.log('Last added record:');
+    console.log(results);
+  });
+};
+
+const changeTodoStatus = (lastAddedTodoId) => {
+  connection.query(changeStatus, lastAddedTodoId, (error, results) => {
+    if (error) throw error;
+    console.log(`Number of changed rows: ${results.changedRows}`);
+  });
+};
+
+const removeLastTodo = (lastAddedTodoId) => {
+  connection.query(remove, lastAddedTodoId, (error, results) => {
+    if (error) throw error;
+    console.log(`Number of deleted rows: ${results.affectedRows}`);
+  });
+}
+
+insertTodo()
+  .then((id) => {
+    selectAllTodos();
+    return id;
+  })
+  .then((id) => {
+    changeTodoStatus(id);
+    return id;
+  })
+  .then((id) => {
+    selectLastTodo(id);
+    return id;
+  })
+  .then((id) => {
+    removeLastTodo(id);
+  })
+  .then(() => {
+    connection.end();
+  });
