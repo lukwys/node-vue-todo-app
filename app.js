@@ -12,50 +12,43 @@ const selectLast = "SELECT * FROM todo WHERE id=?";
 const changeStatus = "UPDATE todo SET flag=1 where id=?";
 const remove = "DELETE FROM todo WHERE id=?";
 
-connection.beginTransaction((error) => {
+connection.connect((error) => {
   if (error) throw error;
+  console.log('Conected');
+});
 
-  connection.query(insert, (error, results) => {
-    if (error) {
-      return connection.rollback(() => {
-        throw error;
-      })
-    };
+connection.query(insert, (error, results) => {
+  if (error) {
+    return connection.rollback(() => {
+      throw error;
+    })
+  };
 
-    console.log(`New id: ${results.insertId}`);
+  console.log(`New id: ${results.insertId}`);
 
-    const lastAddedRecordId = results.insertId;
+  const lastAddedRecordId = results.insertId;
 
-    connection.query(selectAll, (error, results) => {
-      if (error) throw error;
-      console.log('All records:');
-      console.log(results);
-    });
+  connection.query(selectAll, (error, results) => {
+    if (error) throw error;
+    console.log('All records:');
+    console.log(results);
 
     connection.query(selectLast, lastAddedRecordId, (error, results) => {
       if (error) throw error;
       console.log('Last added record:');
       console.log(results);
-    });
 
-    connection.query(changeStatus, lastAddedRecordId, (error, results) => {
-      if (error) throw error;
-      console.log("Changed record:");
-      console.log(results);
-    });
+      connection.query(changeStatus, lastAddedRecordId, (error, results) => {
+        if (error) throw error;
+        console.log("Changed record:");
+        console.log(results);
 
-    connection.query(remove, lastAddedRecordId, (error, results) => {
-      if (error) throw error;
-      console.log(`Number of deleted rows: ${results.affectedRows}`);
-    });
-
-    connection.commit((error) => {
-      if (error) {
-        return connection.rollback(() => {
-          throw error;
+        connection.query(remove, lastAddedRecordId, (error, results) => {
+          if (error) throw error;
+          console.log(`Number of deleted rows: ${results.affectedRows}`);
+          connection.end();
         });
-      }
-      console.log('success!');
+      });
     });
   });
 });
