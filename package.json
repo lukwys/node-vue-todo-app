@@ -1,0 +1,6 @@
+{
+  "name": "node-vue-todo-app",
+  "dependencies": {
+    "mysql": "^2.17.1"
+  }
+}
