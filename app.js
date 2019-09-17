@@ -41,4 +41,6 @@ async function init() {
   connection.end();
 }
 
-init();
+// init();
+
+module.exports = connection;
