@@ -10,6 +10,8 @@
 
 <body>
     <div id="root">
+        <input v-model="title" v-on:keyup.enter="addTodo">
+        <span>{{ title }}</span>
         <ul style>
             <li v-for="(todo, index) in todos">
                 <span>Title: {{ todo.title }}</span>
@@ -25,7 +27,8 @@
         let app = new Vue({
             el: '#root',
             data: {
-                todos: []
+                todos: [],
+                title: ''
             },
             mounted () {
                 this.fetchTodos();
@@ -50,6 +53,19 @@
                         method: 'PATCH'
                     })
                     .then(() => {
+                        this.fetchTodos();
+                    })
+                },
+                addTodo: function () {
+                    fetch('http://localhost:3000/todos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ title: this.title })
+                    })
+                    .then(() => {
+                        this.title = '';
                         this.fetchTodos();
                     })
                 }
