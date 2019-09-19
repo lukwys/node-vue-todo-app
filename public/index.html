@@ -18,6 +18,7 @@
                 <span>Created: {{ todo.status }}</span>
                 <span>Created: {{ todo.flag }}</span>
                 <button v-on:click="completeTodo(todo.id)">Mark as completed</button>
+                <button v-on:click="deleteTodo(todo.id)">Delete</button>
             </li>
         </ul>
     </div>
@@ -66,6 +67,14 @@
                     })
                     .then(() => {
                         this.title = '';
+                        this.fetchTodos();
+                    })
+                },
+                deleteTodo: function (id) {
+                    fetch(`http://localhost:3000/todo/${id}`, {
+                        method: 'DELETE'
+                    })
+                    .then(() => {
                         this.fetchTodos();
                     })
                 },
