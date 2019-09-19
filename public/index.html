@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Node-Vue Todo App</title>
+</head>
+
+<body>
+    <div id="root">
+        <ul style>
+            <li v-for="(todo, index) in todos">
+                <span>Title: {{ todo.title }}</span>
+                <span>Created: {{ todo.status }}</span>
+                <span>Created: {{ todo.flag }}</span>
+                <button v-on:click="completeTodo(todo.id)">Mark as completed</button>
+            </li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+        let app = new Vue({
+            el: '#root',
+            data: {
+                todos: []
+            },
+            mounted () {
+                this.fetchTodos();
+            },
+            methods: {
+                fetchTodos: function () {
+                    fetch('http://localhost:3000/todos/', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then((response) => {
+                        return response.json();
+                    })
+                    .then((todos) => {
+                        this.todos = todos;
+                    })
+                },
+                completeTodo: function (id) {
+                    fetch(`http://localhost:3000/todo/${id}`, {
+                        method: 'PATCH'
+                    })
+                    .then(() => {
+                        this.fetchTodos();
+                    })
+                }
+            },
+        })
+    </script>
+</body>
+
+</html>

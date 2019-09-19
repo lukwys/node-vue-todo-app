@@ -4,6 +4,8 @@ const app = express();
 
 app.use(express.json());
 
+app.use(express.static('public'))
+
 app.get('/todos', (req, res) => {
     const sql = 'select * from todo';
     db.query(sql, (err, results) => {
