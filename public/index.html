@@ -11,9 +11,9 @@
 <body>
     <div id="root">
         <input v-model="title" v-on:keyup.enter="addTodo">
-        <span>{{ title }}</span>
         <ul style>
-            <li v-for="(todo, index) in todos">
+            <button v-on:click="sortTodo">Sort</button>
+            <li v-for="todo in todos">
                 <span>Title: {{ todo.title }}</span>
                 <span>Created: {{ todo.status }}</span>
                 <span>Created: {{ todo.flag }}</span>
@@ -68,6 +68,16 @@
                         this.title = '';
                         this.fetchTodos();
                     })
+                },
+                sortTodo: function () {
+                    this.todos.sort((a, b) => {
+                        if (a.status < b.status) {
+                            return -1;
+                        }
+                        if (a.status > b.status) {
+                            return 1;
+                        }
+                    });
                 }
             },
         })
