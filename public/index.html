@@ -7,22 +7,22 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Node-Vue Todo App</title>
 </head>
-
 <body>
     <div id="root">
-        <input v-model="title" v-on:keyup.enter="addTodo">
+        <form @submit="addTodo">
+            <input v-model="title">
+        </form>
         <ul style>
-            <button v-on:click="sortTodo">Sort</button>
-            <li v-for="todo in todos">
+            <button @click="sortTodo">Sort</button>
+            <li v-for="(todo, index) in todos">
                 <span>Title: {{ todo.title }}</span>
                 <span>Created: {{ todo.status }}</span>
                 <span>Created: {{ todo.flag }}</span>
-                <button v-on:click="completeTodo(todo.id)">Mark as completed</button>
-                <button v-on:click="deleteTodo(todo.id)">Delete</button>
+                <button @click="completeTodo(todo.id, index)">Mark as completed</button>
+                <button @click="deleteTodo(todo.id, index)">Delete</button>
             </li>
         </ul>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script>
         let app = new Vue({
@@ -43,21 +43,27 @@
                         }
                     })
                     .then((response) => {
-                        return response.json();
+                        this.checkResponseStatus(response);
                     })
                     .then((todos) => {
                         this.todos = todos;
                     })
+                    .catch((err) => console.log(err));
                 },
-                completeTodo: function (id) {
+                completeTodo: function (id, index) {
                     fetch(`http://localhost:3000/todo/${id}`, {
                         method: 'PATCH'
                     })
-                    .then(() => {
-                        this.fetchTodos();
+                    .then((response) => {
+                        this.checkResponseStatus(response);
                     })
+                    .then(() => {
+                        this.todos[index].flag = 1;
+                    })
+                    .catch((err) => console.log(err));
                 },
-                addTodo: function () {
+                addTodo: function (e) {
+                    e.preventDefault();
                     fetch('http://localhost:3000/todos', {
                         method: 'POST',
                         headers: {
@@ -65,32 +71,41 @@
                         },
                         body: JSON.stringify({ title: this.title })
                     })
+                    .then((response) => {
+                        this.checkResponseStatus(response);
+                    })
                     .then(() => {
                         this.title = '';
                         this.fetchTodos();
                     })
+                    .catch((err) => console.log(err));
                 },
-                deleteTodo: function (id) {
+                deleteTodo: function (id, index) {
                     fetch(`http://localhost:3000/todo/${id}`, {
                         method: 'DELETE'
                     })
-                    .then(() => {
-                        this.fetchTodos();
+                    .then((response) => {
+                        this.checkResponseStatus(response);
                     })
+                    .then(() => {
+                        this.todos.splice(index, 1);
+                    })
+                    .catch((err) => console.log(err));
                 },
                 sortTodo: function () {
                     this.todos.sort((a, b) => {
-                        if (a.status < b.status) {
-                            return -1;
-                        }
-                        if (a.status > b.status) {
-                            return 1;
-                        }
+                        return a.flag - b.flag;
                     });
+                },
+                checkResponseStatus(response) {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Something went wrong');
+                    }
                 }
             },
         })
     </script>
 </body>
-
 </html>
