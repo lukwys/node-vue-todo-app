@@ -18,7 +18,7 @@
                 <span>Title: {{ todo.title }}</span>
                 <span>Created: {{ todo.status }}</span>
                 <span>Created: {{ todo.flag }}</span>
-                <button @click="completeTodo(todo.id, index)">Mark as completed</button>
+                <button @click="completeTodo(todo)">Mark as completed</button>
                 <button @click="deleteTodo(todo.id, index)">Delete</button>
             </li>
         </ul>
@@ -36,29 +36,20 @@
             },
             methods: {
                 fetchTodos: function () {
-                    fetch('http://localhost:3000/todos/', {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then((response) => {
-                        this.checkResponseStatus(response);
-                    })
+                    fetch('http://localhost:3000/todos/')
+                    .then(this.checkResponseStatus)
                     .then((todos) => {
                         this.todos = todos;
                     })
                     .catch((err) => console.log(err));
                 },
-                completeTodo: function (id, index) {
-                    fetch(`http://localhost:3000/todo/${id}`, {
+                completeTodo: function (todo) {
+                    fetch(`http://localhost:3000/todo/${todo.id}`, {
                         method: 'PATCH'
                     })
-                    .then((response) => {
-                        this.checkResponseStatus(response);
-                    })
+                    .then(this.checkResponseStatus)
                     .then(() => {
-                        this.todos[index].flag = 1;
+                        todo.flag = 1;
                     })
                     .catch((err) => console.log(err));
                 },
@@ -71,12 +62,10 @@
                         },
                         body: JSON.stringify({ title: this.title })
                     })
-                    .then((response) => {
-                        this.checkResponseStatus(response);
-                    })
-                    .then(() => {
+                    .then(this.checkResponseStatus)
+                    .then((todo) => {
                         this.title = '';
-                        this.fetchTodos();
+                        this.getTodo(todo.insertId);
                     })
                     .catch((err) => console.log(err));
                 },
@@ -84,11 +73,19 @@
                     fetch(`http://localhost:3000/todo/${id}`, {
                         method: 'DELETE'
                     })
-                    .then((response) => {
-                        this.checkResponseStatus(response);
-                    })
+                    .then(this.checkResponseStatus)
                     .then(() => {
                         this.todos.splice(index, 1);
+                    })
+                    .catch((err) => console.log(err));
+                },
+                getTodo: function (id) {
+                    fetch(`http://localhost:3000/todo/${id}`, {
+                        method: 'GET'
+                    })
+                    .then(this.checkResponseStatus)
+                    .then((todo) => {
+                        this.todos.push(todo);
                     })
                     .catch((err) => console.log(err));
                 },
@@ -98,8 +95,12 @@
                     });
                 },
                 checkResponseStatus(response) {
+                    const contentType = response.headers.get('content-type');
                     if (response.ok) {
-                        return response.json();
+                        if (contentType && contentType.includes('application/json')) {
+                            return response.json();
+                        }
+                        return
                     } else {
                         throw new Error('Something went wrong');
                     }
