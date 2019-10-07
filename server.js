@@ -4,6 +4,8 @@ const app = express();
 
 app.use(express.json());
 
+app.use(express.static('public'))
+
 app.get('/todos', (req, res) => {
     const sql = 'select * from todo';
     db.query(sql, (err, results) => {
@@ -11,7 +13,7 @@ app.get('/todos', (req, res) => {
             res.status(500).json({ error: 'Something failed!' })
         }
 
-        if (results.length === 0) {
+        if (results && results.length === 0) {
             res.status(404).json({ error: 'Todos not found' });
         } else {
             res.status(200).json(results);
