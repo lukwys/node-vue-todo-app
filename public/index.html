@@ -16,8 +16,8 @@
             <button @click="sortTodo">Sort</button>
             <li v-for="(todo, index) in todos">
                 <span>Title: {{ todo.title }}</span>
-                <span>Created: {{ todo.status }}</span>
-                <span>Created: {{ todo.flag }}</span>
+                <span>Created: {{ todo.creationDate }}</span>
+                <span>Status: {{ todo.status }}</span>
                 <button @click="completeTodo(todo)">Mark as completed</button>
                 <button @click="deleteTodo(todo.id, index)">Delete</button>
             </li>
@@ -49,7 +49,7 @@
                     })
                     .then(this.checkResponseStatus)
                     .then(() => {
-                        todo.flag = 1;
+                        todo.status = 1;
                     })
                     .catch((err) => console.log(err));
                 },
@@ -91,7 +91,7 @@
                 },
                 sortTodo: function () {
                     this.todos.sort((a, b) => {
-                        return a.flag - b.flag;
+                        return a.status - b.status;
                     });
                 },
                 checkResponseStatus(response) {
