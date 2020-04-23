@@ -57,7 +57,7 @@ app.get('/todo/:id', (req, res) => {
 
 app.patch('/todo/:id', (req, res) => {
     const id = req.params.id;
-    const sql = 'update todo set flag=1 where id=?';
+    const sql = 'update todo set status=1 where id=?';
 
     db.query(sql, [id], (err, results) => {
         if (err) {
